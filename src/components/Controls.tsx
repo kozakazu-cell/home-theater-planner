@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings2, ChevronDown, ChevronUp, ShoppingCart, Info, Search, ChevronRight } from 'lucide-react';
+import { Settings2, ChevronDown, ChevronUp, ShoppingCart, Info, Search, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
 import { TheaterState, PROJECTOR_DB, getScreenSizeMm } from '../types/theater';
 import { useI18n } from '../i18n';
 import { ProjectorSelectorModal } from './ProjectorSelectorModal';
@@ -94,6 +94,27 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
         <div className="text-[10px] font-bold text-[#95A5A6] bg-[#F8F9FA] dark:bg-zinc-800 px-2 py-1 rounded">
           {view.toUpperCase()} VIEW
         </div>
+      </div>
+
+      {/* Fit verdict — always visible, the single most important simulation output */}
+      <div className={`px-4 py-2.5 flex items-center justify-between gap-2 border-b shrink-0 ${
+        isInstallationValid
+          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50'
+          : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'
+      }`}>
+        <div className={`flex items-center gap-1.5 text-xs font-bold ${isInstallationValid ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          {isInstallationValid
+            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+            : <AlertTriangle className="w-4 h-4 shrink-0" />}
+          <span>
+            {isInstallationValid
+              ? (lang === 'en' ? 'This setup fits your room' : 'この構成で設置できます')
+              : (lang === 'en' ? 'Adjust distance or size' : '距離かサイズの調整が必要')}
+          </span>
+        </div>
+        <span className="font-mono text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0">
+          {screenSizeInch}&quot; / {projectorPos.z}mm
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto w-full scrollbar-default p-3 space-y-3">
@@ -367,273 +388,75 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
         </AccordionSection>
         </div>
 
-        {/* Viewing Mode */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-[#DEE2E6] dark:border-zinc-800 p-4 space-y-3">
-          <div className="text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase tracking-wider mb-1">Viewing Mode</div>
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <button
-              onClick={() => onUpdateState({ viewingMode: 'cinema' })}
-              title="Immersive distance for cinema based on THX. 1.1x to 1.5x screen width recommended."
-              className={`py-2 px-2.5 rounded-lg text-[10px] font-bold transition-all text-center leading-tight flex flex-col justify-center items-center h-10 ${
-                state.viewingMode === 'cinema' 
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm ring-2 ring-zinc-900/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div>Cinema Immersion (THX)</div>
-              <div className="text-[8px] font-normal opacity-85">((THX Recommended))</div>
-            </button>
-            <button
-              onClick={() => onUpdateState({ viewingMode: 'living' })}
-              title="Standard distance for living rooms based on SMPTE. 1.5x to 2.0x screen width recommended."
-              className={`py-2 px-2.5 rounded-lg text-[10px] font-bold transition-all text-center leading-tight flex flex-col justify-center items-center h-10 ${
-                state.viewingMode === 'living' 
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm ring-2 ring-zinc-900/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div>Living Room (SMPTE)</div>
-              <div className="text-[8px] font-normal opacity-85">((SMPTE TV Recommended))</div>
-            </button>
-            <button
-              onClick={() => onUpdateState({ viewingMode: 'general4k' })}
-              title="General guide for 4K. 1.0x to 1.5x screen diagonal recommended."
-              className={`col-span-2 py-2 px-2.5 rounded-lg text-[10px] font-bold transition-all text-center leading-tight flex flex-col justify-center items-center h-10 ${
-                state.viewingMode === 'general4k' 
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm ring-2 ring-zinc-900/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
-            >
-              {lang === 'en' ? '4K Resolution Guide' : '4K解像度基準'}
-              <div className="text-[8px] font-normal opacity-85">((General Guide))</div>
-            </button>
-            <button
-              onClick={() => onUpdateState({ viewingMode: 'custom' })}
-              className={`col-span-2 py-2 px-2.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 h-9 ${
-                (state.viewingMode === 'custom' || !state.viewingMode) 
-                ? 'bg-[#E59700] text-white shadow-sm ring-2 ring-amber-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-[#E9ECEF] dark:hover:bg-zinc-700'
-              }`}
-            >
-              <Settings2 className="w-3.5 h-3.5" />
-              Custom Manual
-            </button>
-          </div>
-
-          {/* Dynamic Viewing Mode Guidance Area for Touch Screens / Mobile */}
-          <div className="bg-zinc-50 dark:bg-zinc-800/40 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800/60 text-[10px] leading-relaxed text-zinc-600 dark:text-zinc-300 mb-2 mt-0.5 select-none">
-            <div className="font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-1.5 mb-1 text-[11px]">
-              <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-              {(() => {
-                switch (state.viewingMode) {
-                  case 'cinema': return 'Cinema Immersion (THX) (THX Cinema)';
-                  case 'living': return 'Living Room (SMPTE) (SMPTE TV)';
-                  case 'general4k': return lang === 'en' ? '4K Resolution Guide ((General Guide))' : '4K解像度基準 ((General Guide))';
-                  default: return 'Custom Manual';
-                }
-              })()}
-            </div>
-            {(() => {
-              switch (state.viewingMode) {
-                case 'cinema': 
-                  return (
-                    <div className="space-y-1.5 text-zinc-600 dark:text-zinc-300">
-                      <p>Highly immersive experience like a movie theater. 40° viewing angle, 1.1–1.5x screen width.</p>
-                      <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-1.5 mt-1.5 text-[9px] text-zinc-500 dark:text-zinc-400 space-y-1">
-                        <div className="font-bold text-zinc-700 dark:text-zinc-300">🛋️ Simulator changes in this mode:</div>
-                        <ul className="list-disc pl-3.5 space-y-0.5">
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Optimal Distance:</span>1.1x to 1.5x screen width（{(screenSz.w * 1.1 / 1000).toFixed(1)}m〜{(screenSz.w * 1.5 / 1000).toFixed(1)}m） automatically set</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">2D Recommendation Mark:</span>Pink/red "Recommended Viewing Area" on the floor plan syncs to THX distance standard</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Real-time Validation:</span>Status and warnings display if the sofa is outside the recommended range</li>
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                case 'living': 
-                  return (
-                    <div className="space-y-1.5 text-zinc-600 dark:text-zinc-300">
-                      <p>Standard view assuming a 30° viewing angle, suitable for TV or sports (1.5–2.0x screen width).</p>
-                      <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-1.5 mt-1.5 text-[9px] text-zinc-500 dark:text-zinc-400 space-y-1">
-                        <div className="font-bold text-zinc-700 dark:text-zinc-300">🛋️ Simulator changes in this mode:</div>
-                        <ul className="list-disc pl-3.5 space-y-0.5">
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Optimal Distance:</span>1.5x to 2.0x screen width（{(screenSz.w * 1.5 / 1000).toFixed(1)}m〜{(screenSz.w * 2.0 / 1000).toFixed(1)}m） automatically set</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">2D Recommendation Mark:</span>Recommended area dynamically updates to a slightly farther position suited for TV viewing.</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Real-time Validation:</span> Validates if sofa position is eye-friendly for living room viewing.</li>
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                case 'general4k': 
-                  return (
-                    <div className="space-y-1.5 text-zinc-600 dark:text-zinc-300">
-                      <p>Close distance to experience extreme resolution. 1.0-1.5x screen diagonal.</p>
-                      <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-1.5 mt-1.5 text-[9px] text-zinc-500 dark:text-zinc-400 space-y-1">
-                        <div className="font-bold text-zinc-700 dark:text-zinc-300">🛋️ Simulator changes in this mode:</div>
-                        <ul className="list-disc pl-3.5 space-y-0.5">
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Optimal Distance:</span>1.0-1.5x screen diagonal（{(state.screenSizeInch * 25.4 * 1.0 / 1000).toFixed(1)}m〜{(state.screenSizeInch * 25.4 * 1.5 / 1000).toFixed(1)}m） automatically set</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">2D Recommendation Mark:</span>Recommended area moves closer to the screen to utilize maximum high definition benefits.</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Real-time Validation:</span>Validates if the sofa is placed at distance for extreme HD immersion without visible pixels.</li>
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                default: 
-                  return (
-                    <div className="space-y-1.5 text-zinc-600 dark:text-zinc-300">
-                      <p>Manual adjustment of all layouts in millimeters. Unrestricted custom design.</p>
-                      <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-1.5 mt-1.5 text-[9px] text-zinc-500 dark:text-zinc-400 space-y-1">
-                        <div className="font-bold text-zinc-700 dark:text-zinc-300">🛋️ Manual Adjustment Checks:</div>
-                        <ul className="list-disc pl-3.5 space-y-0.5">
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Free Config:</span>Use the control sliders below to change parameters freely.</li>
-                          <li><span className="font-bold text-zinc-600 dark:text-zinc-300">Optimal Guide:</span>Compliance with standards is judged in real-time.</li>
-                        </ul>
-                      </div>
-                    </div>
-                  );
-              }
-            })()}
-          </div>
-        </div>
-
-        {/* Content Mode */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-[#DEE2E6] dark:border-zinc-800 p-4 space-y-3">
-          <div className="text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase tracking-wider block">Content Mode</div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => onUpdateState({ contentMode: 'movie' })}
-              className={`py-1.5 rounded text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                state.contentMode === 'movie' 
-                ? 'bg-[#1E3A8A] text-white shadow-sm ring-2 ring-blue-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${state.contentMode === 'movie' ? 'bg-blue-300' : 'bg-zinc-400'}`} />
-              {t('contentMovie')}
-            </button>
-            <button
-              onClick={() => onUpdateState({ contentMode: 'live' })}
-              className={`py-1.5 rounded text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                state.contentMode === 'live' 
-                ? 'bg-[#581C87] text-white shadow-sm ring-2 ring-purple-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-[#E9ECEF] dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${state.contentMode === 'live' ? 'bg-purple-300' : 'bg-zinc-400'}`} />
-              {t('contentLive')}
-            </button>
-            <button
-              onClick={() => onUpdateState({ contentMode: 'sports' })}
-              className={`py-1.5 rounded text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                state.contentMode === 'sports' 
-                ? 'bg-[#064E3B] text-white shadow-sm ring-2 ring-emerald-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${state.contentMode === 'sports' ? 'bg-emerald-300' : 'bg-zinc-400'}`} />
-              {t('contentSports')}
-            </button>
-            <button
-              onClick={() => onUpdateState({ contentMode: 'game' })}
-              className={`py-1.5 rounded text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                state.contentMode === 'game' 
-                ? 'bg-[#9F1239] text-white shadow-sm ring-2 ring-rose-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-[#E9ECEF] dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${state.contentMode === 'game' ? 'bg-rose-300' : 'bg-zinc-400'}`} />
-              {t('contentGame')}
-            </button>
-            <button
-              onClick={() => onUpdateState({ contentMode: 'off' })}
-              className={`col-span-2 py-1.5 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 ${
-                state.contentMode === 'off' 
-                ? 'bg-zinc-700 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-sm ring-2 ring-zinc-500/20' 
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-[#95A5A6] hover:bg-[#E9ECEF] dark:hover:bg-zinc-700'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${state.contentMode === 'off' ? 'bg-zinc-300' : 'bg-zinc-500'}`} />
-              Lights Out / Projector Off
-            </button>
-          </div>
-        </div>
-
-        {/* 機材アフィリエイト提案 */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-[#DEE2E6] dark:border-zinc-800 overflow-hidden mb-6">
-          <div className="p-4 bg-gradient-to-br from-zinc-50 to-white dark:from-zinc-900 dark:to-zinc-800">
+        {/* Gear list — the shopping funnel, promoted above play features */}
+        <div id="gear-panel" className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border-2 border-[#FF9900]/30 dark:border-[#FF9900]/25 overflow-hidden">
+          <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
                <div className="w-6 h-6 rounded-md bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
                   <ShoppingCart className="w-3.5 h-3.5 text-[#FF9900]" />
                </div>
                <div>
-                  <h4 className="text-[10px] font-bold text-black dark:text-zinc-100 uppercase tracking-widest leading-none">
-                    {lang === 'en' ? 'Required Gear & Parts' : '必要機材・周辺パーツを用意する'}
+                  <h4 className="text-[11px] font-bold text-black dark:text-zinc-100 leading-none">
+                    {lang === 'en' ? 'Gear for this setup' : 'この構成に必要な機材'}
                   </h4>
-                  <div className="text-[8px] text-[#95A5A6] font-medium mt-0.5">
-                    {lang === 'en' ? 'Items and materials matching configured simulation' : '現在のシミュレーション設定に合わせたおすすめ機材です'}
+                  <div className="text-[9px] text-[#95A5A6] font-medium mt-0.5">
+                    {lang === 'en' ? 'Matched to your current simulation' : 'いまのシミュレーション設定に連動しています'}
                   </div>
                </div>
             </div>
 
-            <div className="space-y-2.5">
-              {/* Projector */}
-              <a href={getAmazonSearchUrl(`${projector.brand} ${projector.name}`)} target="_blank" rel="noopener noreferrer sponsored" className="flex items-center justify-between p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#FF9900] transition-colors group shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-900 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700">
-                    <img src={projector.imageUrl} alt={projector.name} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal rounded-sm" />
+            <div className="space-y-2">
+              {[
+                {
+                  icon: <img src={projector.imageUrl} alt={projector.name} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal rounded-sm" />,
+                  cat: lang === 'en' ? 'Projector' : 'プロジェクター本体',
+                  name: `${projector.brand} ${projector.name}`,
+                  kw: `${projector.brand} ${projector.name}`,
+                },
+                {
+                  icon: <span className="text-lg">📺</span>,
+                  cat: lang === 'en' ? 'Screen' : 'スクリーン',
+                  name: lang === 'en' ? `${screenSizeInch}″ 16:9 screen` : `${screenSizeInch}インチ 16:9`,
+                  kw: lang === 'en' ? `Projector Screen ${screenSizeInch} inch` : `プロジェクタースクリーン ${screenSizeInch}インチ`,
+                },
+                {
+                  icon: <span className="text-lg">🛠️</span>,
+                  cat: lang === 'en' ? 'Mount' : '設置マウント',
+                  name: projectorPos.y > 1500
+                    ? (lang === 'en' ? 'Ceiling mount bracket' : '天吊りブラケット')
+                    : (lang === 'en' ? 'Floor / table stand' : '床置き・テーブル用スタンド'),
+                  kw: projectorPos.y > 1500
+                    ? (lang === 'en' ? 'Projector Ceiling Mount' : 'プロジェクター 天吊り金具 天井')
+                    : (lang === 'en' ? 'Projector Stand Floor' : 'プロジェクター スタンド 床置き'),
+                },
+                {
+                  icon: <span className="text-lg">🔌</span>,
+                  cat: lang === 'en' ? 'Cable' : 'ケーブル',
+                  name: lang === 'en'
+                    ? `HDMI 2.1 (~${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m)`
+                    : `HDMI 2.1（目安 ${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m）`,
+                  kw: lang === 'en' ? 'HDMI 2.1 long cable' : 'HDMI 2.1 ロングケーブル',
+                },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900">
+                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-800 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700 shrink-0">
+                    {item.icon}
                   </div>
-                  <div>
-                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{lang === 'en' ? 'Projector' : 'プロジェクター（本体）'}</div>
-                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 group-hover:text-[#FF9900] transition-colors">{projector.brand} {projector.name}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
+                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 truncate">{item.name}</div>
                   </div>
+                  <a
+                    href={getAmazonSearchUrl(item.kw)}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FF9900] hover:bg-[#e68a00] text-white text-[10px] font-bold transition-colors"
+                  >
+                    {lang === 'en' ? 'Amazon' : 'Amazonで見る'}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-[#95A5A6] group-hover:text-[#FF9900]" />
-              </a>
-
-              {/* Screen */}
-              <a href={getAmazonSearchUrl(lang === 'en' ? `Projector Screen ${screenSizeInch} inch` : `プロジェクタースクリーン ${screenSizeInch}インチ`)} target="_blank" rel="noopener noreferrer sponsored" className="flex items-center justify-between p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#FF9900] transition-colors group shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-900 flex items-center justify-center text-lg border border-[#DEE2E6] dark:border-zinc-700">
-                    📺
-                  </div>
-                  <div>
-                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{lang === 'en' ? 'Screen (Calculated)' : '投写スクリーン（想定サイズ）'}</div>
-                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 group-hover:text-[#FF9900] transition-colors">{screenSizeInch}{lang === 'en' ? ' inch 16:9 Screen' : 'インチ 16:9 スクリーン'}</div>
-                  </div>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-[#95A5A6] group-hover:text-[#FF9900]" />
-              </a>
-
-              {/* Install Mount */}
-              <a href={getAmazonSearchUrl(projectorPos.y > 1500 ? (lang === 'en' ? 'Projector Ceiling Mount' : 'プロジェクター 天吊り金具 天井') : (lang === 'en' ? 'Projector Stand Floor' : 'プロジェクター スタンド 床置き'))} target="_blank" rel="noopener noreferrer sponsored" className="flex items-center justify-between p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#FF9900] transition-colors group shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-900 flex items-center justify-center text-lg border border-[#DEE2E6] dark:border-zinc-700">
-                    🛠️
-                  </div>
-                  <div>
-                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{lang === 'en' ? 'Installation' : '金具・設置マウント'}</div>
-                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 group-hover:text-[#FF9900] transition-colors">
-                      {projectorPos.y > 1500 ? (lang === 'en' ? 'Ceiling Mount Bracket' : '天吊りブラケット') : (lang === 'en' ? 'Floor/Table Stand' : '床置き/テーブル用スタンド')}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-[#95A5A6] group-hover:text-[#FF9900]" />
-              </a>
-
-              {/* Cabling */}
-              <a href={getAmazonSearchUrl(lang === 'en' ? 'HDMI 2.1 long cable' : 'HDMI 2.1 ロングケーブル')} target="_blank" rel="noopener noreferrer sponsored" className="flex items-center justify-between p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#FF9900] transition-colors group shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-900 flex items-center justify-center text-lg border border-[#DEE2E6] dark:border-zinc-700">
-                    🔌
-                  </div>
-                  <div>
-                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{lang === 'en' ? 'Cabling' : '配線'}</div>
-                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 group-hover:text-[#FF9900] transition-colors">
-                      {lang === 'en' ? `HDMI 2.1 Cable (~${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m)` : `HDMI2.1対応ケーブル（目安 ${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m）`}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-[#95A5A6] group-hover:text-[#FF9900]" />
-              </a>
+              ))}
             </div>
 
             <p className="text-[8px] text-[#95A5A6] leading-relaxed mt-3 pt-2 border-t border-dashed border-[#E9ECEF] dark:border-zinc-800">
@@ -644,7 +467,101 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
           </div>
         </div>
 
+        {/* Viewing Mode — compact segmented control with one-line summary */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-[#DEE2E6] dark:border-zinc-800 p-4 space-y-2.5">
+          <div className="text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase tracking-wider">{lang === 'en' ? 'Viewing Mode' : '視聴モード'}</div>
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+            {([
+              { key: 'cinema', label: lang === 'en' ? 'Cinema' : 'シネマ' },
+              { key: 'living', label: lang === 'en' ? 'Living' : 'リビング' },
+              { key: 'general4k', label: '4K' },
+              { key: 'custom', label: lang === 'en' ? 'Custom' : '自由' },
+            ] as const).map(({ key, label }) => {
+              const active = state.viewingMode === key || (key === 'custom' && !state.viewingMode);
+              return (
+                <button
+                  key={key}
+                  onClick={() => onUpdateState({ viewingMode: key })}
+                  className={`py-1.5 rounded-md text-[10px] font-bold transition-colors ${
+                    active
+                      ? 'bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {(() => {
+              switch (state.viewingMode) {
+                case 'cinema':
+                  return lang === 'en'
+                    ? `THX immersive: seat ${(screenSz.w * 1.1 / 1000).toFixed(1)}–${(screenSz.w * 1.5 / 1000).toFixed(1)}m from screen. The pink zone in the floor plan updates.`
+                    : `THX基準の没入距離。スクリーンから ${(screenSz.w * 1.1 / 1000).toFixed(1)}〜${(screenSz.w * 1.5 / 1000).toFixed(1)}m が推奨。図面のピンク領域が連動します。`;
+                case 'living':
+                  return lang === 'en'
+                    ? `SMPTE living-room: seat ${(screenSz.w * 1.5 / 1000).toFixed(1)}–${(screenSz.w * 2.0 / 1000).toFixed(1)}m from screen, suited for TV and sports.`
+                    : `SMPTE基準のテレビ向け距離。${(screenSz.w * 1.5 / 1000).toFixed(1)}〜${(screenSz.w * 2.0 / 1000).toFixed(1)}m が推奨。テレビ・スポーツ観戦向き。`;
+                case 'general4k':
+                  return lang === 'en'
+                    ? `4K close-up: ${(state.screenSizeInch * 25.4 / 1000).toFixed(1)}–${(state.screenSizeInch * 25.4 * 1.5 / 1000).toFixed(1)}m to enjoy full resolution without visible pixels.`
+                    : `4K解像度を活かす近距離。${(state.screenSizeInch * 25.4 / 1000).toFixed(1)}〜${(state.screenSizeInch * 25.4 * 1.5 / 1000).toFixed(1)}m で画素を感じず高精細を体感。`;
+                default:
+                  return lang === 'en'
+                    ? 'Free layout in millimeters. Standards compliance is still validated in real time.'
+                    : 'すべてmm単位で自由に配置。基準への適合は上の判定バーでリアルタイムに確認できます。';
+              }
+            })()}
+          </p>
         </div>
+
+        {/* Content Mode — compact chip row */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-[#DEE2E6] dark:border-zinc-800 p-4 space-y-2.5">
+          <div className="text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase tracking-wider">{lang === 'en' ? 'Screen Content' : 'スクリーンに映す映像'}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { key: 'movie', label: t('contentMovie') },
+              { key: 'live', label: t('contentLive') },
+              { key: 'sports', label: t('contentSports') },
+              { key: 'game', label: t('contentGame') },
+              { key: 'off', label: lang === 'en' ? 'Off' : '消灯' },
+            ] as const).map(({ key, label }) => {
+              const active = state.contentMode === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => onUpdateState({ contentMode: key })}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors border ${
+                    active
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        
+        </div>
+
+      {/* Sticky purchase CTA — the funnel is always one tap away */}
+      <div className="shrink-0 p-3 border-t border-[#DEE2E6] dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <a
+          href={getAmazonSearchUrl(`${projector.brand} ${projector.name}`)}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white text-xs font-bold transition-colors"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          {lang === 'en' ? `View ${projector.name} on Amazon` : `『${projector.name}』をAmazonで見る`}
+        </a>
+        <p className="text-[8px] text-center text-[#95A5A6] mt-1.5">{lang === 'en' ? 'PR: affiliate link' : 'PR：アフィリエイトリンクを含みます'}</p>
+      </div>
 
       <ProjectorSelectorModal
         isOpen={isModalOpen}
