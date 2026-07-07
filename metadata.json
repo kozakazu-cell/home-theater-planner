@@ -1,0 +1,6 @@
+{
+  "name": "Home Theater Planner",
+  "description": "3-view synchronized home theater installation simulator with projector cone visualization and orthogonal wiring logic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
