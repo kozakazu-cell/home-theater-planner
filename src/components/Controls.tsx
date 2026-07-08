@@ -85,8 +85,8 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
   const { minThrowDist, maxThrowDist, isInstallationValid } = fit;
 
   return (
-    <div className="w-full md:w-[350px] bg-[#F1F3F5] dark:bg-zinc-950 flex-1 min-h-0 md:flex-none md:h-full flex flex-col z-10 border-t md:border-t-0 md:border-l border-[#E9ECEF] dark:border-zinc-800">
-      <div className="p-4 border-b border-[#DEE2E6] dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-900 shadow-sm z-10">
+    <div className="w-full lg:w-[350px] bg-[#F1F3F5] dark:bg-zinc-950 flex-1 lg:flex-none lg:h-full flex flex-col z-10 border-t lg:border-t-0 lg:border-l border-[#E9ECEF] dark:border-zinc-800 overflow-hidden">
+      <div className="p-4 border-b border-[#DEE2E6] dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-900 shadow-sm z-10 shrink-0">
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-[#2D3436] dark:text-zinc-200" />
           <h2 className="text-xs font-bold text-[#2D3436] dark:text-zinc-200 uppercase tracking-wide">Simulation Params</h2>
@@ -224,7 +224,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                     onChange={(e) => onUpdateState({ viewerModel: e.target.value as any })}
                     className="w-full bg-[#F8F9FA] dark:bg-zinc-800 border border-[#DEE2E6] dark:border-zinc-700 text-[#2D3436] dark:text-zinc-100 text-xs py-2 px-2 rounded focus:outline-none focus:border-black dark:focus:border-white appearance-none"
                   >
-                    <option value="human">{lang === 'en' ? 'Standard (Human)' : '標準（人間）'}</option>
+                    <option value="human">{lang === 'en' ? 'Standard' : '標準'}</option>
                     <option value="bear">{lang === 'en' ? 'Teddy Bear' : '熊のぬいぐるみ'}</option>
                     <option value="hero">{lang === 'en' ? 'Action Hero' : 'アクションヒーロー'}</option>
                   </select>

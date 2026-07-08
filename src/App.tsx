@@ -267,8 +267,8 @@ export default function App() {
 
       {activeTab === 'simulator' && (
         <>
-          <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-            <div className="h-[40vh] shrink-0 md:h-auto md:flex-1 relative bg-white dark:bg-zinc-900 flex flex-col border-r border-[#E9ECEF] dark:border-zinc-800">
+          <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <div className="h-[35vh] sm:h-[40vh] lg:h-auto lg:flex-1 relative bg-white dark:bg-zinc-900 flex flex-col border-r border-[#E9ECEF] dark:border-zinc-800">
               <div className="absolute top-3 left-1/2 -translate-x-1/2 flex bg-white/90 dark:bg-zinc-900/90 border border-[#DEE2E6] dark:border-zinc-800 rounded p-1 z-10 shadow-sm backdrop-blur-sm w-full max-w-[400px]">
                  {['top', 'side', 'front', '3d'].map((v) => (
                     <button
@@ -476,38 +476,59 @@ export default function App() {
 
       {activeTab === 'links' && (
         <main className="flex-1 overflow-y-auto bg-[#F8F9FA] dark:bg-zinc-950 p-6 sm:p-12">
-          <div className="max-w-4xl mx-auto space-y-12">
+          <div className="max-w-5xl mx-auto space-y-12">
             <div>
               <h2 className="text-3xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">{lang === 'en' ? 'Projector Links' : 'プロジェクター リンク'}</h2>
-              <p className="text-zinc-500 dark:text-zinc-400 mb-8">{lang === 'en' ? 'Direct links to the projectors.' : 'プロジェクターの販売ページへのリンクです。'}</p>
+              <p className="text-zinc-500 dark:text-zinc-400 mb-8">{lang === 'en' ? 'Direct links to the projectors, organized by brand.' : 'プロジェクターの販売ページへのリンク（メーカー別に整理）です。'}</p>
               
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {PROJECTOR_DB.map((item, idx) => (
-                  <div key={idx} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm flex flex-col">
-                    {item.imageUrl && (
-                      <div className="w-full h-32 mb-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center p-2">
-                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+              {(() => {
+                // Group projectors by brand
+                const grouped = PROJECTOR_DB.reduce((acc, proj) => {
+                  if (!acc[proj.brand]) acc[proj.brand] = [];
+                  acc[proj.brand].push(proj);
+                  return acc;
+                }, {} as Record<string, typeof PROJECTOR_DB>);
+                
+                // Sort brands alphabetically
+                const sortedBrands = Object.keys(grouped).sort();
+                
+                return (
+                  <div className="space-y-10">
+                    {sortedBrands.map((brand) => (
+                      <div key={brand}>
+                        <h3 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 pb-2 border-b border-zinc-200 dark:border-zinc-800">{brand}</h3>
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {grouped[brand].map((item, idx) => (
+                            <div key={idx} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm flex flex-col hover:shadow-md dark:hover:shadow-lg transition-shadow">
+                              {item.imageUrl && (
+                                <div className="w-full h-28 mb-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                                   <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                </div>
+                              )}
+                              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 text-sm line-clamp-2">{item.name}</h4>
+                              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1 mb-3">
+                                <span className="inline-block mb-1">{item.type}</span>
+                                <br />
+                                {item.resolution} / {item.brightness}
+                              </p>
+                              <a href={(function(){
+                                const baseUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(item.brand + ' ' + item.name)}`;
+                                const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
+                                if (tag) {
+                                  return `${baseUrl}&tag=${tag}`;
+                                }
+                                return baseUrl;
+                              })()} target="_blank" rel="noopener noreferrer sponsored" className="w-full px-3 py-2 bg-gradient-to-b from-[#FF9900] to-[#E38800] hover:shadow-[0_4px_8px_rgba(255,153,0,0.4)] active:from-[#E38800] active:to-[#CC7700] transition-all rounded text-center text-xs font-bold text-white shadow-[0_2px_4px_rgba(255,153,0,0.3)]">
+                                {lang === 'en' ? 'View on Amazon' : 'Amazonで見る'}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    )}
-                    <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2">{item.name}</h3>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1 mb-4">
-                      {item.brand} / {item.resolution} / {item.brightness}lm
-                    </p>
-                    <div className="flex items-center gap-2 mt-auto">
-                      <a href={(function(){
-                        const baseUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(item.brand + ' ' + item.name)}`;
-                        const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
-                        if (tag) {
-                          return `${baseUrl}&tag=${tag}`;
-                        }
-                        return baseUrl;
-                      })()} target="_blank" rel="noopener noreferrer" className="flex-1 px-3 py-2 bg-gradient-to-b from-[#FF9900] to-[#E38800] hover:shadow-[0_4px_8px_rgba(255,153,0,0.4)] transition-all rounded text-center text-xs font-bold text-white truncate shadow-[0_2px_4px_rgba(255,153,0,0.3)]">
-                        Amazonで探す
-                      </a>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
             
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
