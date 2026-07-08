@@ -24,9 +24,11 @@ const getProjectorAmazonUrl = (projector: Pick<TheaterState['projector'], 'brand
 const BRAND_STORE_URLS: Record<string, string> = {
   BenQ: 'https://www.amazon.co.jp/stores/%E3%83%99%E3%83%B3%E3%82%AF%E3%83%A5%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%91%E3%83%B3/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%82%BF%E3%83%BC/page/B5F51FCB-A8E1-46E9-949F-E29AF3BFCD06',
   XGIMI: 'https://www.amazon.co.jp/stores/XGIMI/XGIMI/page/157C458F-0CBD-4216-AE74-7CAC2954C03F',
-  ANKER: 'https://www.amazon.co.jp/stores/Anker%E3%82%A2%E3%83%B3%E3%82%AB%E3%83%BC/Nebula/page/E5B36CF8-9C9D-4161-83DD-157C366394EE',
-  Aladdin: 'https://www.amazon.co.jp/stores/AladdinX/page/31C8FAAF-7E8B-495F-926F-4F02E5D36E2A',
+  ANKER: 'https://www.amazon.co.jp/stores/page/9FDB00B2-9C45-418D-B913-1D6297A37A92',
+  Aladdin: 'https://www.amazon.co.jp/stores/AladdinX/page/ADCEBDFA-F5AF-4C90-9F73-FE7C73C5BABF',
   Dangbei: 'https://www.amazon.co.jp/stores/Dangbei/page/828B0947-3756-4E46-8991-C15909BC5BA2',
+  EPSON: 'https://www.amazon.co.jp/s?k=EPSON+%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%82%BF%E3%83%BC&__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=32IGYAZ7P2ZXM&sprefix=epson+%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%82%BF%E3%83%BC%2Caps%2C199&ref=nb_sb_noss_1',
+  JMGO: 'https://www.amazon.co.jp/stores/JMGO%EF%BC%88%E3%82%B8%E3%82%A7%E3%82%A4%E3%82%A8%E3%83%A0%E3%82%B4%E3%83%BC%EF%BC%89/page/03933704-C9EE-43FE-A7AC-85EE098D3B3F',
 };
 
 const getBrandStoreUrl = (brand: string) => {
@@ -581,7 +583,7 @@ export default function App() {
                             rel="noopener noreferrer sponsored"
                             className="shrink-0 flex items-center gap-1 text-xs font-bold text-[#FF9900] hover:text-[#e68a00] transition-colors"
                           >
-                            {lang === 'en' ? 'Official Store' : '公式ストア'}
+                            {lang === 'en' ? 'Amazon Store Page' : 'Amazonストアページ'}
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </h3>
