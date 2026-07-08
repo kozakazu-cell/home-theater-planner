@@ -5,23 +5,21 @@ import { useI18n } from '../i18n';
 import { ProjectorSelectorModal } from './ProjectorSelectorModal';
 import { getInstallationFit } from '../utils/theaterFit';
 
+// Falls back to the documented default tag if the env var isn't set for this build,
+// so affiliate links never silently ship untagged.
+const AMAZON_ASSOCIATE_TAG_FALLBACK = 'theatersim-22';
+
 const getAmazonSearchUrl = (keyword: string) => {
   const base = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}`;
-  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
-  if (tag) {
-    return `${base}&tag=${tag}`;
-  }
-  return base;
+  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || AMAZON_ASSOCIATE_TAG_FALLBACK;
+  return `${base}&tag=${tag}`;
 };
 
 // New: Direct ASIN link generation
 const getAmazonProductUrl = (asin: string) => {
   const base = `https://www.amazon.co.jp/dp/${asin}`;
-  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
-  if (tag) {
-    return `${base}?tag=${tag}`;
-  }
-  return base;
+  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || AMAZON_ASSOCIATE_TAG_FALLBACK;
+  return `${base}?tag=${tag}`;
 };
 
 
@@ -107,24 +105,31 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
       </div>
 
       {/* Fit verdict — always visible, the single most important simulation output */}
-      <div className={`px-4 py-2.5 flex items-center justify-between gap-2 border-b shrink-0 ${
+      <div className={`px-4 py-2.5 border-b shrink-0 ${
         isInstallationValid
           ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50'
           : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'
       }`}>
-        <div className={`flex items-center gap-1.5 text-xs font-bold ${isInstallationValid ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-          {isInstallationValid
-            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-            : <AlertTriangle className="w-4 h-4 shrink-0" />}
-          <span>
+        <div className="flex items-center justify-between gap-2">
+          <div className={`flex items-center gap-1.5 text-xs font-bold ${isInstallationValid ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             {isInstallationValid
-              ? (lang === 'en' ? 'This setup fits your room' : 'この構成で設置できます')
-              : (lang === 'en' ? 'Adjust distance or size' : '距離かサイズの調整が必要')}
+              ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+              : <AlertTriangle className="w-4 h-4 shrink-0" />}
+            <span>
+              {isInstallationValid
+                ? (lang === 'en' ? 'This setup fits your room' : 'この構成で設置できます')
+                : (lang === 'en' ? 'Adjust distance or size' : '距離かサイズの調整が必要')}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0">
+            {screenSizeInch}&quot; / {projectorPos.z}mm
           </span>
         </div>
-        <span className="font-mono text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0">
-          {screenSizeInch}&quot; / {projectorPos.z}mm
-        </span>
+        <p className="text-[9px] leading-tight text-zinc-500 dark:text-zinc-400 mt-1 opacity-80">
+          {lang === 'en'
+            ? 'Theoretical estimate from published specs — confirm the exact product specs before purchase.'
+            : '公表仕様に基づく理論上の判定です。購入前に必ず製品仕様をご確認ください。'}
+        </p>
       </div>
 
       <div className="flex-1 overflow-y-auto w-full scrollbar-default p-3 space-y-3">
@@ -428,24 +433,6 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                   cat: lang === 'en' ? 'Screen' : 'スクリーン',
                   name: lang === 'en' ? `${screenSizeInch}″ 16:9 screen` : `${screenSizeInch}インチ 16:9`,
                   kw: lang === 'en' ? `Projector Screen ${screenSizeInch} inch` : `プロジェクタースクリーン ${screenSizeInch}インチ`,
-                },
-                {
-                  icon: <span className="text-lg">🛠️</span>,
-                  cat: lang === 'en' ? 'Mount' : '設置マウント',
-                  name: projectorPos.y > 1500
-                    ? (lang === 'en' ? 'Ceiling mount bracket' : '天吊りブラケット')
-                    : (lang === 'en' ? 'Floor / table stand' : '床置き・テーブル用スタンド'),
-                  kw: projectorPos.y > 1500
-                    ? (lang === 'en' ? 'Projector Ceiling Mount' : 'プロジェクター 天吊り金具 天井')
-                    : (lang === 'en' ? 'Projector Stand Floor' : 'プロジェクター スタンド 床置き'),
-                },
-                {
-                  icon: <span className="text-lg">🔌</span>,
-                  cat: lang === 'en' ? 'Cable' : 'ケーブル',
-                  name: lang === 'en'
-                    ? `HDMI 2.1 (~${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m)`
-                    : `HDMI 2.1（目安 ${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m）`,
-                  kw: lang === 'en' ? 'HDMI 2.1 long cable' : 'HDMI 2.1 ロングケーブル',
                 },
               ].map((item, i) => {
                 // For projector, use ASIN direct link if available

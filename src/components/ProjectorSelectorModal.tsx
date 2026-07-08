@@ -17,7 +17,7 @@ interface Props {
 export function ProjectorSelectorModal({ isOpen, onClose, currentProjectorId, onSelect, room, screenSizeInch }: Props) {
   const { t, lang } = useI18n();
   const screenSz = getScreenSizeMm(screenSizeInch);
-  const [filter, setFilter] = useState<'all' | 'UST' | 'Short' | 'Standard' | 'Mobile'>('all');
+  const [filter, setFilter] = useState<'all' | 'UST' | 'Standard' | 'Mobile'>('all');
 
   const projectorsWithFit = useMemo(() => {
     return [...PROJECTOR_DB].map(p => {
@@ -65,7 +65,7 @@ export function ProjectorSelectorModal({ isOpen, onClose, currentProjectorId, on
 
         {/* Filters */}
         <div className="shrink-0 px-4 sm:px-6 py-3 border-b border-[#E9ECEF] bg-white flex gap-2 overflow-x-auto scrollbar-hide shadow-sm z-10">
-          {(['all', 'UST', 'Short', 'Standard', 'Mobile'] as const).map(f => (
+          {(['all', 'UST', 'Standard', 'Mobile'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -77,7 +77,6 @@ export function ProjectorSelectorModal({ isOpen, onClose, currentProjectorId, on
             >
               {f === 'all' ? (lang === 'en' ? 'All' : 'すべて') :
                f === 'UST' ? 'UST' :
-               f === 'Short' ? (lang === 'en' ? 'Short Throw' : '短焦点') :
                f === 'Standard' ? (lang === 'en' ? 'Standard Throw' : '標準焦点') :
                (lang === 'en' ? 'Mobile' : 'モバイル')}
             </button>

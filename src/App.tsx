@@ -7,6 +7,18 @@ import { TheaterState, PROJECTOR_DB, getScreenSizeMm } from './types/theater';
 import { useI18n } from './i18n';
 import { Sun, Moon, Home, HelpCircle, Projector, ExternalLink } from 'lucide-react';
 
+// Falls back to the documented default tag if the env var isn't set for this build,
+// so affiliate links never silently ship untagged.
+const AMAZON_ASSOCIATE_TAG_FALLBACK = 'theatersim-22';
+
+const getProjectorAmazonUrl = (projector: Pick<TheaterState['projector'], 'brand' | 'name' | 'amazonASIN'>) => {
+  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || AMAZON_ASSOCIATE_TAG_FALLBACK;
+  if (projector.amazonASIN) {
+    return `https://www.amazon.co.jp/dp/${projector.amazonASIN}?tag=${tag}`;
+  }
+  return `https://www.amazon.co.jp/s?k=${encodeURIComponent(projector.brand + ' ' + projector.name)}&tag=${tag}`;
+};
+
 const getRandomProjector = () => {
   const randomIndex = Math.floor(Math.random() * PROJECTOR_DB.length);
   return PROJECTOR_DB[randomIndex];
@@ -243,7 +255,7 @@ export default function App() {
             }`}
           >
             <ExternalLink className="w-4 h-4" />
-            {lang === 'en' ? 'Links' : 'リンク'}
+            {lang === 'en' ? 'Projector Links' : 'プロジェクタリンク'}
           </button>
         </div>
       </header>
@@ -464,6 +476,36 @@ export default function App() {
             </div>
             
             <div>
+              <h2 className="text-3xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">{lang === 'en' ? 'How the Fit Judgment Works' : '設置可否の判定ロジックについて'}</h2>
+              <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+                <p className="text-zinc-650 dark:text-zinc-400 text-sm leading-relaxed">
+                  {lang === 'en'
+                    ? 'The verdict bar (✓ / adjustment needed) is calculated from two conditions, both of which must pass:'
+                    : '画面上部の判定バー（✓設置できます／要調整）は、以下の2つの条件を両方満たすかどうかで判定しています。'}
+                </p>
+                <ul className="text-sm space-y-3 text-zinc-650 dark:text-zinc-400 list-decimal list-inside">
+                  <li>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-200">{lang === 'en' ? 'Throw distance is within the projector’s supported range: ' : '投写距離がプロジェクターの対応範囲内であること：'}</span>
+                    {lang === 'en'
+                      ? 'For the selected screen width, the projector’s throw ratio (min–max) defines a valid distance range. The projector position (Z) must fall inside that range (with a small margin for zoom/fixed-throw lenses).'
+                      : '選んだスクリーン幅に対して、プロジェクターの投写比（最小〜最大）から算出される許容距離の範囲内に、実際の設置距離（Z）が収まっている必要があります（ズーム・固定焦点レンズ用に若干の余裕を持たせています）。'}
+                  </li>
+                  <li>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-200">{lang === 'en' ? 'The room has enough depth: ' : '部屋の奥行きに余裕があること：'}</span>
+                    {lang === 'en'
+                      ? 'Projector body depth plus a 5cm safety clearance from the back wall must fit within the room depth you entered.'
+                      : 'プロジェクター本体の奥行きに加えて、後壁からの安全マージン（5cm）を確保した上で、入力した部屋の奥行きに収まっている必要があります。'}
+                  </li>
+                </ul>
+                <div className="bg-[#FFFBEB] dark:bg-amber-950/40 text-[#B45309] dark:text-amber-200 p-3 rounded border border-[#FEF3C7] dark:border-amber-900/30 text-sm leading-relaxed">
+                  {lang === 'en'
+                    ? '⚠️ This judgment is a theoretical calculation based on published throw-ratio specs, not a guarantee. Actual installations are also affected by lens shift range, keystone correction, ceiling/wall obstructions, and cabling. Always confirm the exact specifications on the manufacturer’s official product page before purchasing.'
+                    : '⚠️ この判定はスローレシオ（投写比）の公表値に基づく理論上の計算であり、設置を保証するものではありません。実際の設置ではレンズシフト範囲、台形補正の限界、天井・壁の障害物、配線なども影響します。購入前には必ずメーカーの製品ページで正確な仕様をご確認ください。'}
+                </div>
+              </div>
+            </div>
+
+            <div>
               <h2 className="text-3xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">{lang === 'en' ? 'Frequently Asked Questions' : 'よくある質問'}</h2>
               <div className="space-y-4">
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -475,8 +517,12 @@ export default function App() {
                   <p className="text-zinc-650 dark:text-zinc-400 text-sm">{lang === 'en' ? 'A: Eye level should be at the lower 1/3 to 1/2 of the screen.' : 'A: ソファに座った時の目線（約90〜100cm）が、スクリーンの下から1/3〜1/2の高さに来るのが理想的です。高すぎると首が疲れます。'}</p>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <h4 className="font-bold mb-2">{lang === 'en' ? 'Q: Can I trust the "fits" / "adjustment needed" verdict?' : 'Q: 「設置できます」「要調整」の判定は信用できますか？'}</h4>
+                  <p className="text-zinc-650 dark:text-zinc-400 text-sm">{lang === 'en' ? 'A: It’s a theoretical estimate based on published throw-ratio and dimension specs, not a guarantee. See "How the Fit Judgment Works" above, and always verify the official specs before buying.' : 'A: 公表されている投写比・寸法データに基づく理論上の目安であり、設置を保証するものではありません。上記「設置可否の判定ロジックについて」もあわせてご確認のうえ、購入前に必ずメーカー公式の仕様をご確認ください。'}</p>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                   <h4 className="font-bold mb-2">{lang === 'en' ? 'Q: About affiliate links' : 'Q: アフィリエイトリンクについて'}</h4>
-                  <p className="text-zinc-650 dark:text-zinc-400 text-sm">{lang === 'en' ? 'A: Purchases through external links may generate affiliate revenue for us.' : 'A: 各ECサイトへのリンクから商品が購入されると、紹介料が発生する場合があります。リンク先は検索結果のため、商品が確実にあるとは限りません。'}</p>
+                  <p className="text-zinc-650 dark:text-zinc-400 text-sm">{lang === 'en' ? 'A: Purchases through external links may generate affiliate revenue for us. Screen/accessory links go to search results, so a matching product isn’t always guaranteed to be listed.' : 'A: 各ECサイトへのリンクから商品が購入されると、紹介料が発生する場合があります。スクリーンなどのアクセサリー類のリンクは検索結果のため、該当商品が確実に存在するとは限りません。'}</p>
                 </div>
               </div>
             </div>
@@ -521,11 +567,19 @@ export default function App() {
                                 </div>
                               )}
                               <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 text-sm line-clamp-2">{item.name}</h4>
-                              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1 mb-3">
-                                <span className="inline-block mb-1">{item.type}</span>
-                                <br />
-                                {item.resolution} / {item.brightness}
-                              </p>
+                              <div className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1 mb-3 space-y-1.5">
+                                <div className="flex flex-wrap gap-1">
+                                  <span className="inline-block px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-[10px] font-medium">{item.type}</span>
+                                  {item.lightSource && (
+                                    <span className="inline-block px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-[10px] font-medium">{item.lightSource}</span>
+                                  )}
+                                </div>
+                                <div>{item.resolution} {item.brightness && `/ ${item.brightness}`}</div>
+                                {(item.minSizeInch || item.maxSizeInch) && (
+                                  <div>{lang === 'en' ? 'Screen size' : '対応画面サイズ'}: {item.minSizeInch}–{item.maxSizeInch}″</div>
+                                )}
+                                {item.os && <div>OS: {item.os}</div>}
+                              </div>
                               {/* Price display */}
                               {item.salePriceJPY && (
                                 <div className="mb-2 pb-2 border-b border-[#E9ECEF] dark:border-zinc-700">
@@ -539,19 +593,7 @@ export default function App() {
                                   ) : null}
                                 </div>
                               )}
-                              <a href={(function(){
-                                // Use ASIN direct link if available, otherwise fallback to search
-                                if (item.amazonASIN) {
-                                  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
-                                  return `https://www.amazon.co.jp/dp/${item.amazonASIN}${tag ? `?tag=${tag}` : ''}`;
-                                }
-                                const baseUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(item.brand + ' ' + item.name)}`;
-                                const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
-                                if (tag) {
-                                  return `${baseUrl}&tag=${tag}`;
-                                }
-                                return baseUrl;
-                              })()} target="_blank" rel="noopener noreferrer sponsored" className="w-full px-3 py-2 bg-gradient-to-b from-[#FF9900] to-[#E38800] hover:shadow-[0_4px_8px_rgba(255,153,0,0.4)] active:from-[#E38800] active:to-[#CC7700] transition-all rounded text-center text-xs font-bold text-white shadow-[0_2px_4px_rgba(255,153,0,0.3)]">
+                              <a href={getProjectorAmazonUrl(item)} target="_blank" rel="noopener noreferrer sponsored" className="w-full px-3 py-2 bg-gradient-to-b from-[#FF9900] to-[#E38800] hover:shadow-[0_4px_8px_rgba(255,153,0,0.4)] active:from-[#E38800] active:to-[#CC7700] transition-all rounded text-center text-xs font-bold text-white shadow-[0_2px_4px_rgba(255,153,0,0.3)]">
                                 {lang === 'en' ? 'View on Amazon' : 'Amazonで見る'}
                               </a>
                             </div>
