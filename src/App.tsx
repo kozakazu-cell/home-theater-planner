@@ -501,8 +501,13 @@ export default function App() {
                           {grouped[brand].map((item, idx) => (
                             <div key={idx} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm flex flex-col hover:shadow-md dark:hover:shadow-lg transition-shadow">
                               {item.imageUrl && (
-                                <div className="w-full h-28 mb-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                                <div className="w-full h-28 mb-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center p-2 relative">
                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                   {item.isOnPrimeDaySale && item.discountPercent && (
+                                    <div className="absolute top-2 right-2 bg-[#FF9900] text-white text-[10px] font-bold px-2 py-1 rounded">
+                                      {item.discountPercent.toFixed(1)}% OFF
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 text-sm line-clamp-2">{item.name}</h4>
@@ -511,6 +516,19 @@ export default function App() {
                                 <br />
                                 {item.resolution} / {item.brightness}
                               </p>
+                              {/* Price display */}
+                              {item.salePriceJPY && (
+                                <div className="mb-2 pb-2 border-b border-[#E9ECEF] dark:border-zinc-700">
+                                  <div className="text-xs font-bold text-[#FF9900]">
+                                    ¥{item.salePriceJPY.toLocaleString('ja-JP')}
+                                  </div>
+                                  {item.discountPercent ? (
+                                    <div className="text-[10px] line-through text-[#95A5A6]">
+                                      ¥{item.priceJPY?.toLocaleString('ja-JP')}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )}
                               <a href={(function(){
                                 // Use ASIN direct link if available, otherwise fallback to search
                                 if (item.amazonASIN) {

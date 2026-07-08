@@ -461,6 +461,30 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                     <div className="flex-1 min-w-0">
                       <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
                       <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 truncate">{item.name}</div>
+                      {/* Show price for projector */}
+                      {i === 0 && projector.salePriceJPY && (
+                        <div className="text-xs mt-1">
+                          {projector.discountPercent ? (
+                            <>
+                              <span className="line-through text-[#95A5A6] text-[10px]">
+                                ¥{projector.priceJPY?.toLocaleString('ja-JP')}
+                              </span>
+                              <span className="ml-1.5 font-bold text-[#FF9900]">
+                                ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
+                              </span>
+                              {projector.isOnPrimeDaySale && (
+                                <span className="ml-1 inline-block px-1.5 py-0.5 bg-[#FF9900] text-white text-[9px] font-bold rounded">
+                                  {projector.discountPercent.toFixed(1)}% OFF
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="font-bold text-[#2D3436] dark:text-zinc-100">
+                              ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <a
                       href={linkUrl}
@@ -575,7 +599,14 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white text-xs font-bold transition-colors"
         >
           <ShoppingCart className="w-4 h-4" />
-          {lang === 'en' ? `View ${projector.name} on Amazon` : `『${projector.name}』をAmazonで見る`}
+          <span>
+            {lang === 'en' ? `View ${projector.name}` : `『${projector.name}』`}
+            {projector.salePriceJPY && (
+              <span className="ml-1">
+                ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
+              </span>
+            )}
+          </span>
         </a>
         <p className="text-[8px] text-center text-[#95A5A6] mt-1.5">{lang === 'en' ? 'PR: affiliate link' : 'PR：アフィリエイトリンクを含みます'}</p>
       </div>
