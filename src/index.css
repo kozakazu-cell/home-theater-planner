@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4 defaults `dark:` to the OS prefers-color-scheme media query.
+   The app toggles a `.dark` class on the root element instead, so without
+   this custom variant the in-app light/dark switch has no visible effect. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --animate-shimmer: shimmer 1.5s infinite;
   --keyframes-shimmer: {

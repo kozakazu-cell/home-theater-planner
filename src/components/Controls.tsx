@@ -92,15 +92,28 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
   const fit = getInstallationFit(room, projector, screenSz.w, projectorPos.z);
   const { minThrowDist, maxThrowDist, isInstallationValid } = fit;
 
+  // For UST projectors, screenBottomY is derived from projectorPos.y (see App.tsx's
+  // updateState), so editing it directly means solving that formula for the Y that
+  // produces the requested screen height instead.
+  const handleScreenBottomYChange = (newBottomY: number) => {
+    if (projector.type === 'UST') {
+      const offsetRatio = (projector.offsetPercent - 100) / 100;
+      const newY = newBottomY - projector.size.h / 2 - offsetRatio * screenSz.h;
+      onUpdateState({ projectorPos: { ...projectorPos, y: Math.round(newY) } });
+    } else {
+      onUpdateState({ screenBottomY: newBottomY });
+    }
+  };
+
   return (
     <div className="w-full lg:w-[350px] bg-[#F1F3F5] dark:bg-zinc-950 flex-1 lg:flex-none lg:h-full flex flex-col z-10 border-t lg:border-t-0 lg:border-l border-[#E9ECEF] dark:border-zinc-800 overflow-hidden">
       <div className="p-4 border-b border-[#DEE2E6] dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-900 shadow-sm z-10 shrink-0">
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-[#2D3436] dark:text-zinc-200" />
-          <h2 className="text-xs font-bold text-[#2D3436] dark:text-zinc-200 uppercase tracking-wide">Simulation Params</h2>
+          <h2 className="text-xs font-bold text-[#2D3436] dark:text-zinc-200 uppercase tracking-wide">{lang === 'en' ? 'Simulation Params' : 'シミュレーション設定'}</h2>
         </div>
-        <div className="text-[10px] font-bold text-[#95A5A6] bg-[#F8F9FA] dark:bg-zinc-800 px-2 py-1 rounded">
-          {view.toUpperCase()} VIEW
+        <div className="text-[10px] font-bold text-[#95A5A6] bg-[#F8F9FA] dark:bg-zinc-800 px-2 py-1 rounded uppercase tracking-wide">
+          {view === 'top' ? t('topView') : view === 'front' ? t('frontView') : view === 'side' ? t('sideView') : '3D'}
         </div>
       </div>
 
@@ -122,7 +135,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
             </span>
           </div>
           <span className="font-mono text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0">
-            {screenSizeInch}&quot; / {projectorPos.z}mm
+            {screenSizeInch}&quot; / {Math.round(projectorPos.z)}mm
           </span>
         </div>
         <p className="text-[9px] leading-tight text-zinc-500 dark:text-zinc-400 mt-1 opacity-80">
@@ -183,22 +196,20 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
             <div className="flex justify-between items-center text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase">
               <span>{t('screenHeightLimit')} (Y)</span>
               <div className="flex items-center gap-1 font-mono text-[#2D3436] dark:text-zinc-100">
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={state.screenBottomY}
-                  onChange={(e) => onUpdateState({ screenBottomY: Math.max(0, parseInt(e.target.value) || 0) })}
-                  className="w-14 text-right bg-transparent border-b border-transparent hover:border-[#DEE2E6] dark:hover:border-zinc-700 focus:border-black dark:focus:border-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={projector.type === 'UST'}
+                  onChange={(e) => handleScreenBottomYChange(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-14 text-right bg-transparent border-b border-transparent hover:border-[#DEE2E6] dark:hover:border-zinc-700 focus:border-black dark:focus:border-white focus:outline-none"
                 />
                 <span>mm</span>
               </div>
             </div>
-            <input 
-              type="range" min="0" max={Math.max(0, room.height - screenSz.h)} step="10" 
-              value={state.screenBottomY} 
-              onChange={(e) => onUpdateState({ screenBottomY: Math.max(0, parseInt(e.target.value) || 0) })}
-              className={`w-full accent-black dark:accent-zinc-200 ${projector.type === 'UST' ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={projector.type === 'UST'}
+            <input
+              type="range" min="0" max={Math.max(0, room.height - screenSz.h)} step="10"
+              value={state.screenBottomY}
+              onChange={(e) => handleScreenBottomYChange(Math.max(0, parseInt(e.target.value) || 0))}
+              className="w-full accent-black dark:accent-zinc-200"
             />
           </div>
 
@@ -216,7 +227,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase">
-                    <span>{t('viewerSofa')} Size</span>
+                    <span>{t('viewerSofaSize')}</span>
                   </div>
                   <select 
                     value={state.audienceSize?.w || 1800}
@@ -232,7 +243,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-[10px] font-bold text-[#95A5A6] dark:text-zinc-400 uppercase">
-                    <span>{t('viewerSofa')} Character</span>
+                    <span>{t('viewerSofaCharacter')}</span>
                   </div>
                   <select 
                     value={state.viewerModel || 'human'}
@@ -275,18 +286,18 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
             <div className={`flex justify-between items-center text-[10px] font-bold uppercase ${!isInstallationValid ? 'text-red-600 dark:text-red-400' : 'text-[#95A5A6] dark:text-zinc-400'}`}>
               <span>{t('projectorZPos')}</span>
               <div className="flex items-center gap-1 font-mono text-[#2D3436] dark:text-zinc-100">
-                <input 
-                  type="number" 
-                  value={projectorPos.z}
+                <input
+                  type="number"
+                  value={Math.round(projectorPos.z)}
                   onChange={(e) => onUpdateState({ projectorPos: { ...projectorPos, z: parseInt(e.target.value) || 0 } })}
                   className="w-14 text-right bg-transparent border-b border-transparent hover:border-[#DEE2E6] dark:hover:border-zinc-700 focus:border-black dark:focus:border-white focus:outline-none text-[#2D3436] dark:text-zinc-100"
                 />
                 <span>mm</span>
               </div>
             </div>
-            <input 
-              type="range" min="50" max={room.depth - 50} step="10" 
-              value={projectorPos.z} 
+            <input
+              type="range" min="50" max={room.depth - 50} step="10"
+              value={Math.round(projectorPos.z)}
               onChange={(e) => onUpdateState({ projectorPos: { ...projectorPos, z: parseInt(e.target.value) } })}
               className="w-full accent-black dark:accent-zinc-200"
             />
@@ -415,7 +426,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                     {lang === 'en' ? 'Gear for this setup' : 'この構成に必要な機材'}
                   </h4>
                   <div className="text-[9px] text-[#95A5A6] font-medium mt-0.5">
-                    {lang === 'en' ? 'Matched to your current simulation' : 'いまのシミュレーション設定に連動しています'}
+                    {lang === 'en' ? 'Matched to your current simulation' : '現在のシミュレーション設定に連動しています'}
                   </div>
                </div>
             </div>
@@ -441,45 +452,49 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                   linkUrl = getAmazonProductUrl(projector.amazonASIN);
                 }
                 return (
-                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900">
-                    <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-800 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700 shrink-0">
-                      {item.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
-                      <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 truncate">{item.name}</div>
-                      {/* Show price for projector */}
-                      {i === 0 && projector.salePriceJPY && (
-                        <div className="text-xs mt-1">
-                          {projector.discountPercent ? (
-                            <>
-                              <span className="line-through text-[#95A5A6] text-[10px]">
-                                ¥{projector.priceJPY?.toLocaleString('ja-JP')}
-                              </span>
-                              <span className="ml-1.5 font-bold text-[#FF9900]">
+                  <div key={i} className="p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-800 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700 shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
+                        <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 leading-snug wrap-break-word">{item.name}</div>
+                        {/* Show price for projector */}
+                        {i === 0 && projector.salePriceJPY && (
+                          <div className="text-xs mt-1">
+                            {projector.discountPercent ? (
+                              <>
+                                <span className="line-through text-[#95A5A6] text-[10px]">
+                                  ¥{projector.priceJPY?.toLocaleString('ja-JP')}
+                                </span>
+                                <span className="ml-1.5 font-bold text-[#FF9900]">
+                                  ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
+                                </span>
+                                {projector.isOnPrimeDaySale && (
+                                  <span className="ml-1 inline-block px-1.5 py-0.5 bg-[#FF9900] text-white text-[9px] font-bold rounded">
+                                    {Math.round(projector.discountPercent)}% OFF
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-bold text-[#2D3436] dark:text-zinc-100">
                                 ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
                               </span>
-                              {projector.isOnPrimeDaySale && (
-                                <span className="ml-1 inline-block px-1.5 py-0.5 bg-[#FF9900] text-white text-[9px] font-bold rounded">
-                                  {projector.discountPercent.toFixed(1)}% OFF
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <span className="font-bold text-[#2D3436] dark:text-zinc-100">
-                              ¥{projector.salePriceJPY.toLocaleString('ja-JP')}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <a
                       href={linkUrl}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FF9900] hover:bg-[#e68a00] text-white text-[10px] font-bold transition-colors"
+                      className="mt-2 w-full flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FF9900] hover:bg-[#e68a00] text-white text-[10px] font-bold transition-colors"
                     >
-                      {lang === 'en' ? 'Amazon' : 'Amazonで見る'}
+                      {i === 0
+                        ? (lang === 'en' ? 'View on Amazon' : 'Amazonで見る')
+                        : (lang === 'en' ? 'Search on Amazon' : 'Amazonで探す')}
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -489,8 +504,8 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
 
             <p className="text-[8px] text-[#95A5A6] leading-relaxed mt-3 pt-2 border-t border-dashed border-[#E9ECEF] dark:border-zinc-800">
               {lang === 'en'
-                ? '※ This page contains promotional/affiliate links (Amazon Associates). As an Amazon Associate, we earn from qualifying purchases.'
-                : '※本ページはAmazonアソシエイト・プログラムのPRリンクを含みます。適格販売により収入を得ています。'}
+                ? '※ This page contains promotional/affiliate links (Amazon Associates). As an Amazon Associate, we earn from qualifying purchases. Prices shown are for reference only and the actual price on Amazon may differ.'
+                : '※本ページはAmazonアソシエイト・プログラムのPRリンクを含みます。適格販売により収入を得ています。表示価格は参考情報であり、実際の販売価格とは異なる場合があります。'}
             </p>
           </div>
         </div>

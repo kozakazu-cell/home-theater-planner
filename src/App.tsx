@@ -19,6 +19,25 @@ const getProjectorAmazonUrl = (projector: Pick<TheaterState['projector'], 'brand
   return `https://www.amazon.co.jp/s?k=${encodeURIComponent(projector.brand + ' ' + projector.name)}&tag=${tag}`;
 };
 
+// Amazon official brand store pages, keyed by the exact `brand` value used in PROJECTOR_DB.
+// Brands without a confirmed store page fall back to a brand-name search link.
+const BRAND_STORE_URLS: Record<string, string> = {
+  BenQ: 'https://www.amazon.co.jp/stores/%E3%83%99%E3%83%B3%E3%82%AF%E3%83%A5%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%91%E3%83%B3/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%82%BF%E3%83%BC/page/B5F51FCB-A8E1-46E9-949F-E29AF3BFCD06',
+  XGIMI: 'https://www.amazon.co.jp/stores/XGIMI/XGIMI/page/157C458F-0CBD-4216-AE74-7CAC2954C03F',
+  ANKER: 'https://www.amazon.co.jp/stores/Anker%E3%82%A2%E3%83%B3%E3%82%AB%E3%83%BC/Nebula/page/E5B36CF8-9C9D-4161-83DD-157C366394EE',
+  Aladdin: 'https://www.amazon.co.jp/stores/AladdinX/page/31C8FAAF-7E8B-495F-926F-4F02E5D36E2A',
+  Dangbei: 'https://www.amazon.co.jp/stores/Dangbei/page/828B0947-3756-4E46-8991-C15909BC5BA2',
+};
+
+const getBrandStoreUrl = (brand: string) => {
+  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG || AMAZON_ASSOCIATE_TAG_FALLBACK;
+  const storeUrl = BRAND_STORE_URLS[brand];
+  if (storeUrl) {
+    return `${storeUrl}${storeUrl.includes('?') ? '&' : '?'}tag=${tag}`;
+  }
+  return `https://www.amazon.co.jp/s?k=${encodeURIComponent(brand)}&tag=${tag}`;
+};
+
 const getRandomProjector = () => {
   const randomIndex = Math.floor(Math.random() * PROJECTOR_DB.length);
   return PROJECTOR_DB[randomIndex];
@@ -33,7 +52,8 @@ const getInitialScreenBottomY = (projectorType: string, screenSizeInch: number, 
   // We'll calculate a bottom Y that centers the screen visually or just use ~700.
   const idealCenterY = roomHeight / 2;
   const bottomY = idealCenterY - (screenSz.h / 2);
-  return Math.max(300, Math.min(bottomY, roomHeight - screenSz.h - 100)); // clamp safely
+  // screenSz.h comes from a trig ratio, so round to a whole mm for display/storage.
+  return Math.round(Math.max(300, Math.min(bottomY, roomHeight - screenSz.h - 100)));
 };
 
 // Initial state generator
@@ -57,8 +77,9 @@ const generateInitialState = (): TheaterState => {
   const maxThrowDist = projector.throwRatio.max * screenSz.w + offset;
   const isFixedThrow = projector.throwRatio.min === projector.throwRatio.max;
   
-  // Use midpoint of valid throw range, or minThrowDist if fixed throw
-  const initialZ = isFixedThrow ? minThrowDist : (minThrowDist + maxThrowDist) / 2;
+  // Use midpoint of valid throw range, or minThrowDist if fixed throw.
+  // screenSz.w is derived from a trig ratio, so round to a whole mm for display/storage.
+  const initialZ = Math.round(isFixedThrow ? minThrowDist : (minThrowDist + maxThrowDist) / 2);
   
   return {
     room,
@@ -145,7 +166,7 @@ export default function App() {
 
       const maxScreenBottomY = nextState.room.height - screenSz.h;
       if (nextState.screenBottomY > maxScreenBottomY) {
-        nextState.screenBottomY = Math.max(0, maxScreenBottomY);
+        nextState.screenBottomY = Math.round(Math.max(0, maxScreenBottomY));
       }
 
       // Enforce X position to be strictly centered
@@ -179,7 +200,7 @@ export default function App() {
               className="flex items-center gap-2 px-3 py-1.5 bg-black dark:bg-zinc-800 text-white text-xs font-bold rounded uppercase hover:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors"
             >
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              <span className="hidden sm:inline">Share</span>
+              <span className="hidden sm:inline">{lang === 'en' ? 'Share' : 'シェア'}</span>
             </button>
             
             {/* Dark mode toggle */}
@@ -399,7 +420,7 @@ export default function App() {
               <h2 className="text-3xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">{lang === 'en' ? 'Home Theater Basics' : 'ホームシアターの基礎知識'}</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                  <h3 className="text-lg font-bold mb-3">{lang === 'en' ? 'What is Throw Ratio?' : 'スローレシオ（投写比）とは？'}</h3>
+                  <h3 className="text-lg font-bold mb-3">{lang === 'en' ? 'What is Throw Ratio?' : 'スローレシオ（投写比）'}</h3>
                   <p className="text-zinc-650 dark:text-zinc-400 text-sm leading-relaxed mb-4">
                     {lang === 'en' ? 'The ratio between projection distance and screen width.' : 'プロジェクターからスクリーンまでの距離(D)と投影画面の幅(W)の比率です。'}
                   </p>
@@ -535,7 +556,7 @@ export default function App() {
           <div className="max-w-5xl mx-auto space-y-12">
             <div>
               <h2 className="text-3xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">{lang === 'en' ? 'Projector Links' : 'プロジェクター リンク'}</h2>
-              <p className="text-zinc-500 dark:text-zinc-400 mb-8">{lang === 'en' ? 'Direct links to the projectors, organized by brand.' : 'プロジェクターの販売ページへのリンク（メーカー別に整理）です。'}</p>
+              <p className="text-zinc-500 dark:text-zinc-400 mb-8">{lang === 'en' ? 'Direct links to the projectors\' Amazon product pages, organized by brand.' : 'プロジェクターのAmazon販売ページへのリンク（メーカー別に整理）です。'}</p>
               
               {(() => {
                 // Group projectors by brand
@@ -552,7 +573,18 @@ export default function App() {
                   <div className="space-y-10">
                     {sortedBrands.map((brand) => (
                       <div key={brand}>
-                        <h3 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 pb-2 border-b border-zinc-200 dark:border-zinc-800">{brand}</h3>
+                        <h3 className="flex items-center justify-between gap-2 text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                          <span>{brand}</span>
+                          <a
+                            href={getBrandStoreUrl(brand)}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="shrink-0 flex items-center gap-1 text-xs font-bold text-[#FF9900] hover:text-[#e68a00] transition-colors"
+                          >
+                            {lang === 'en' ? 'Official Store' : '公式ストア'}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </h3>
                         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
                           {grouped[brand].map((item, idx) => (
                             <div key={idx} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm flex flex-col hover:shadow-md dark:hover:shadow-lg transition-shadow">
@@ -561,7 +593,7 @@ export default function App() {
                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
                                    {item.isOnPrimeDaySale && item.discountPercent && (
                                     <div className="absolute top-2 right-2 bg-[#FF9900] text-white text-[10px] font-bold px-2 py-1 rounded">
-                                      {item.discountPercent.toFixed(1)}% OFF
+                                      {Math.round(item.discountPercent)}% OFF
                                     </div>
                                   )}
                                 </div>
@@ -612,7 +644,7 @@ export default function App() {
                 {lang === 'en' ? 'Disclaimer / Affiliate Notice' : '免責事項 / アフィリエイトについて'}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                {lang === 'en' ? 'Some links utilize affiliate programs. Prices and stock may vary.' : '当ページの一部リンクはアフィリエイトプログラムを利用しています。購入者に追加料金はかかりません。'}
+                {lang === 'en' ? 'Some links utilize affiliate programs (no extra cost to you). Prices and stock shown here are for reference only and the actual price on Amazon may differ.' : '当ページの一部リンクはアフィリエイトプログラムを利用しています（購入者に追加料金はかかりません）。表示している価格・在庫は参考情報であり、実際のAmazon販売価格とは異なる場合があります。'}
               </p>
             </div>
           </div>

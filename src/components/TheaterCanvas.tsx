@@ -250,10 +250,10 @@ export function TheaterCanvas({ view, state, onUpdateState, isDarkMode = false }
         {view === 'front' && !isWireframe ? (
           <>
             <text x={s2d.x} y={s2d.y - fontSizeMm * 0.5} dominantBaseline="middle" textAnchor="middle" fontSize={fontSizeMm * 1.5} fill={isDarkMode ? "#93C5FD" : "#1E40AF"} className="font-bold opacity-80 select-none">
-              {screenSizeInch}&#34; SCREEN
+              {screenSizeInch}&#34; {lang === 'en' ? 'SCREEN' : 'スクリーン'}
             </text>
             <text x={s2d.x} y={s2d.y + fontSizeMm * 1.2} dominantBaseline="middle" textAnchor="middle" fontSize={fontSizeMm * 0.9} fill={isDarkMode ? "#93C5FD" : "#1E40AF"} className="font-mono font-bold opacity-80 select-none">
-              W:{Math.round(screenSz.w)}mm × H:{Math.round(screenSz.h)}mm
+              {lang === 'en' ? 'W' : '幅'}:{Math.round(screenSz.w)}mm × {lang === 'en' ? 'H' : '高さ'}:{Math.round(screenSz.h)}mm
             </text>
             <DimensionLine 
               x1={s2d.x - sSz2d.w / 2} y1={s2d.y - sSz2d.h / 2} 
@@ -323,20 +323,22 @@ export function TheaterCanvas({ view, state, onUpdateState, isDarkMode = false }
     const f = isWireframe ? 'none' : (isDarkMode ? '#064e3b' : '#DCFCE7');
     const borderC = isDarkMode ? '#34d399' : '#10B981';
     const opacity = isWireframe ? 0.7 : 1;
-    const isAladdin = projector.brand === 'Aladdin X' || projector.name.includes('Aladdin');
+    // Round, ceiling-light-style bodies (e.g. Aladdin X series) are circular
+    // only when viewed down their axis (top view); front/side stay rectangular.
+    const isRoundFromTop = projector.bodyShape === 'cylinder' && view === 'top';
 
     return (
-      <rect 
-        x={p2d.x - pSz2d.w / 2} 
-        y={p2d.y - pSz2d.h / 2} 
-        width={pSz2d.w} 
-        height={pSz2d.h} 
+      <rect
+        x={p2d.x - pSz2d.w / 2}
+        y={p2d.y - pSz2d.h / 2}
+        width={pSz2d.w}
+        height={pSz2d.h}
         fill={f}
         stroke={borderC}
         strokeWidth={strokeWidth}
         strokeDasharray={dash}
         opacity={opacity}
-        rx={isAladdin ? Math.min(pSz2d.w, pSz2d.h) / 2 : (view === 'top' ? pSz2d.w * 0.1 : 0)}
+        rx={isRoundFromTop ? Math.min(pSz2d.w, pSz2d.h) / 2 : (view === 'top' ? pSz2d.w * 0.1 : 0)}
         className={isWireframe ? "pointer-events-none" : "cursor-move"}
         vectorEffect="non-scaling-stroke" 
       >
@@ -517,7 +519,7 @@ export function TheaterCanvas({ view, state, onUpdateState, isDarkMode = false }
              <DimensionLine 
                x1={sofa2d.x - sofaSz.w/2} y1={sofa2d.y + sofaSz.d/2 + fontSizeMm * 2} 
                x2={sofa2d.x + sofaSz.w/2} y2={sofa2d.y + sofaSz.d/2 + fontSizeMm * 2} 
-               label={`Sofa Width ${sofaSz.w}mm`} 
+               label={lang === 'en' ? `Sofa Width ${sofaSz.w}mm` : `ソファ幅 ${sofaSz.w}mm`}
                offset={0} 
                color="#FDA4AF" 
                fontSize={fontSizeMm}

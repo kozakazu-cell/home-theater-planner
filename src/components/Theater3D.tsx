@@ -3,6 +3,7 @@ import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Stars, PerspectiveCameraProps } from '@react-three/drei';
 import * as THREE from 'three';
 import { TheaterState, getScreenSizeMm } from '../types/theater';
+import { useI18n } from '../i18n';
 
 import movie1 from '../assets/images/movie_scifi_1_1779020852231.png';
 import movie2 from '../assets/images/movie_steampunk_2_1779020868905.png';
@@ -169,8 +170,10 @@ function Scene({ state, onUpdateState, isDarkMode = false }: Theater3DProps) {
     if (projector.type === 'UST') {
       return {
         apexX: projX,
-        apexY: projY + projSz.h / 2, // top surface
-        apexZ: projZ, // center (longitudinally)
+        // UST light exits via a mirror raised above the case, not flush with the top
+        // surface — keep a visible gap so the beam clearly emerges above the body.
+        apexY: projY + projSz.h,
+        apexZ: projZ - projSz.d / 2, // front edge
       };
     } else {
       return {
@@ -255,9 +258,22 @@ function Scene({ state, onUpdateState, isDarkMode = false }: Theater3DProps) {
       
       {/* Projector */}
       <mesh position={[projX, projY, projZ]}>
-        <boxGeometry args={[projSz.w, projSz.h, projSz.d]} />
+        {projector.bodyShape === 'cylinder' ? (
+          <cylinderGeometry args={[projSz.w / 2, projSz.w / 2, projSz.h, 32]} />
+        ) : (
+          <boxGeometry args={[projSz.w, projSz.h, projSz.d]} />
+        )}
         <meshStandardMaterial color="#10B981" />
       </mesh>
+
+      {/* UST mirror mount — short upright post from the case's top-front edge to the
+          elevated light-exit point, so the beam clearly reads as emerging above the case */}
+      {projector.type === 'UST' && (
+        <mesh position={[apexX, (projY + projSz.h / 2 + apexY) / 2, apexZ]}>
+          <cylinderGeometry args={[projSz.h * 0.08, projSz.h * 0.08, apexY - (projY + projSz.h / 2), 12]} />
+          <meshStandardMaterial color="#059669" />
+        </mesh>
+      )}
 
       {/* Sofa */}
       {showViewer && (
@@ -330,6 +346,7 @@ function Scene({ state, onUpdateState, isDarkMode = false }: Theater3DProps) {
 
 export function Theater3D({ state, onUpdateState, isDarkMode = false }: Theater3DProps) {
   const { room } = state;
+  const { lang } = useI18n();
   const m = (mm: number) => mm / 1000;
   const roomD = m(room.depth);
   const roomH = m(room.height);
@@ -344,19 +361,19 @@ export function Theater3D({ state, onUpdateState, isDarkMode = false }: Theater3
       </Canvas>
       <div className="absolute top-4 right-4 flex flex-col gap-2">
          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-lg text-white">
-            <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">3D Controller</div>
+            <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">{lang === 'en' ? '3D Controller' : '3D操作方法'}</div>
             <div className="text-[11px] flex flex-col gap-1">
                <div className="flex justify-between gap-4">
-                  <span className="text-white/70">Pan</span>
-                  <span className="font-mono">Right Click</span>
+                  <span className="text-white/70">{lang === 'en' ? 'Pan' : '平行移動'}</span>
+                  <span className="font-mono">{lang === 'en' ? 'Right Click' : '右クリック'}</span>
                </div>
                <div className="flex justify-between gap-4">
-                  <span className="text-white/70">Rotate</span>
-                  <span className="font-mono">Left Click</span>
+                  <span className="text-white/70">{lang === 'en' ? 'Rotate' : '回転'}</span>
+                  <span className="font-mono">{lang === 'en' ? 'Left Click' : '左クリック'}</span>
                </div>
                <div className="flex justify-between gap-4">
-                  <span className="text-white/70">Zoom</span>
-                  <span className="font-mono">Scroll</span>
+                  <span className="text-white/70">{lang === 'en' ? 'Zoom' : 'ズーム'}</span>
+                  <span className="font-mono">{lang === 'en' ? 'Scroll' : 'スクロール'}</span>
                </div>
             </div>
          </div>
