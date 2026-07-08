@@ -11,9 +11,9 @@ export const HomeTab = ({ lang, onStart }: { lang: Language, onStart: () => void
           {lang === 'en' ? 'Plan Your Perfect Home Theater' : '理想のホームシアターを計画しよう'}
         </h2>
         <p className="text-zinc-500 dark:text-zinc-400 mb-8 text-center max-w-2xl text-lg">
-          {lang === 'en' 
+          {lang === 'en'
             ? 'Easily simulate projector placement, optimal viewing distance, and screen size in 2D and 3D. Find the perfect gear tailored for your room.'
-            : 'プロジェクターの配置、最適な視聴距離、スクリーンサイズを2Dと3Dで簡単にシミュレーション。あなたの部屋に合った完璧な機材を見つけましょう。'}
+            : <>プロジェクターの配置、最適な視聴距離、スクリーンサイズを2Dと3Dで簡単にシミュレーション。<br />あなたの部屋に合ったプロジェクターを見つけましょう。</>}
         </p>
 
         <img src={theaterSimPreview} alt="Simulation Preview" className="w-full max-w-2xl rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 mb-10 object-cover" />
