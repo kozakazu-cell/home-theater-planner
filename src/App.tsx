@@ -38,10 +38,20 @@ const generateInitialState = (): TheaterState => {
   const screenSizeInch = 100;
   const screenBottomY = getInitialScreenBottomY(projector.type, screenSizeInch, room.height);
   
+  // Calculate valid throw distance (in mm) for this projector+screen combo
+  const screenSz = getScreenSizeMm(screenSizeInch);
+  const offset = projector.throwDistanceOffset || 0;
+  const minThrowDist = projector.throwRatio.min * screenSz.w + offset;
+  const maxThrowDist = projector.throwRatio.max * screenSz.w + offset;
+  const isFixedThrow = projector.throwRatio.min === projector.throwRatio.max;
+  
+  // Use midpoint of valid throw range, or minThrowDist if fixed throw
+  const initialZ = isFixedThrow ? minThrowDist : (minThrowDist + maxThrowDist) / 2;
+  
   return {
     room,
     projector,
-    projectorPos: { x: 2000, y: projector.type === 'UST' ? screenBottomY - 200 : 2200, z: 4500 },
+    projectorPos: { x: 2000, y: projector.type === 'UST' ? screenBottomY - 200 : 2200, z: initialZ },
     screenSizeInch,
     screenBottomY,
     audioPos: [],
