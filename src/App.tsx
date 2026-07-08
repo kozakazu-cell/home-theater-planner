@@ -512,6 +512,11 @@ export default function App() {
                                 {item.resolution} / {item.brightness}
                               </p>
                               <a href={(function(){
+                                // Use ASIN direct link if available, otherwise fallback to search
+                                if (item.amazonASIN) {
+                                  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
+                                  return `https://www.amazon.co.jp/dp/${item.amazonASIN}${tag ? `?tag=${tag}` : ''}`;
+                                }
                                 const baseUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(item.brand + ' ' + item.name)}`;
                                 const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
                                 if (tag) {

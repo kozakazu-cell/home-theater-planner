@@ -14,6 +14,16 @@ const getAmazonSearchUrl = (keyword: string) => {
   return base;
 };
 
+// New: Direct ASIN link generation
+const getAmazonProductUrl = (asin: string) => {
+  const base = `https://www.amazon.co.jp/dp/${asin}`;
+  const tag = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
+  if (tag) {
+    return `${base}?tag=${tag}`;
+  }
+  return base;
+};
+
 
 
 function AccordionSection({ title, children, defaultOpen = true, isDarkMode = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean, isDarkMode?: boolean }) {
@@ -437,26 +447,33 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
                     : `HDMI 2.1（目安 ${Math.max(3, Math.ceil(projectorPos.z / 1000) + 1)}m）`,
                   kw: lang === 'en' ? 'HDMI 2.1 long cable' : 'HDMI 2.1 ロングケーブル',
                 },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900">
-                  <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-800 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700 shrink-0">
-                    {item.icon}
+              ].map((item, i) => {
+                // For projector, use ASIN direct link if available
+                let linkUrl = getAmazonSearchUrl(item.kw);
+                if (i === 0 && projector.amazonASIN) {
+                  linkUrl = getAmazonProductUrl(projector.amazonASIN);
+                }
+                return (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-[#E9ECEF] dark:border-zinc-700 bg-white dark:bg-zinc-900">
+                    <div className="w-10 h-10 rounded bg-[#F8F9FA] dark:bg-zinc-800 flex items-center justify-center p-1 border border-[#DEE2E6] dark:border-zinc-700 shrink-0">
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
+                      <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 truncate">{item.name}</div>
+                    </div>
+                    <a
+                      href={linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FF9900] hover:bg-[#e68a00] text-white text-[10px] font-bold transition-colors"
+                    >
+                      {lang === 'en' ? 'Amazon' : 'Amazonで見る'}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[8px] font-bold text-[#95A5A6] uppercase">{item.cat}</div>
-                    <div className="text-xs font-bold text-[#2D3436] dark:text-zinc-100 truncate">{item.name}</div>
-                  </div>
-                  <a
-                    href={getAmazonSearchUrl(item.kw)}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FF9900] hover:bg-[#e68a00] text-white text-[10px] font-bold transition-colors"
-                  >
-                    {lang === 'en' ? 'Amazon' : 'Amazonで見る'}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <p className="text-[8px] text-[#95A5A6] leading-relaxed mt-3 pt-2 border-t border-dashed border-[#E9ECEF] dark:border-zinc-800">
@@ -552,7 +569,7 @@ export function Controls({ state, onUpdateState, view, setView, isDarkMode = fal
       {/* Sticky purchase CTA — the funnel is always one tap away */}
       <div className="shrink-0 p-3 border-t border-[#DEE2E6] dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <a
-          href={getAmazonSearchUrl(`${projector.brand} ${projector.name}`)}
+          href={projector.amazonASIN ? getAmazonProductUrl(projector.amazonASIN) : getAmazonSearchUrl(`${projector.brand} ${projector.name}`)}
           target="_blank"
           rel="noopener noreferrer sponsored"
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#FF9900] hover:bg-[#e68a00] text-white text-xs font-bold transition-colors"
